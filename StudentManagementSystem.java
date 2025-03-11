@@ -1,10 +1,10 @@
 import java.util.*;
 
 class Student {
-    private final int id;
+    private int id;
     private String name;
     private int age;
-    private final Set<String> courses;
+    private Set<String> courses;
 
     public Student(int id, String name, int age) {
         this.id = id;
@@ -28,8 +28,8 @@ class Student {
 }
 
 class StudentManager {
-    private final Map<Integer, Student> students = new HashMap<>();
-    private final Map<String, Set<Student>> courseEnrollments = new HashMap<>();
+    private Map<Integer, Student> students = new HashMap<>();
+    private Map<String, Set<Student>> courseEnrollments = new HashMap<>();
 
     public boolean addStudent(Student student) {
         if (students.containsKey(student.getId())) return false;
@@ -61,9 +61,11 @@ class StudentManager {
     }
 
     public void displayAllStudentsSortedById() {
-        students.values().stream()
-                .sorted(Comparator.comparingInt(Student::getId))
-                .forEach(System.out::println);
+        List<Student> studentList = new ArrayList<>(students.values());
+        Collections.sort(studentList, Comparator.comparingInt(Student::getId));
+        for (Student student : studentList) {
+            System.out.println(student);
+        }
     }
 
     public Student searchStudentById(int id) {
@@ -71,27 +73,38 @@ class StudentManager {
     }
 
     public List<Student> listStudentsByCourse(String course) {
-        return students.values().stream()
-                .filter(s -> s.getCourses().contains(course))
-                .toList();
+        List<Student> result = new ArrayList<>();
+        for (Student student : students.values()) {
+            if (student.getCourses().contains(course)) {
+                result.add(student);
+            }
+        }
+        return result;
     }
 
     private void updateCourseEnrollments(Student student, Set<String> newCourses, Set<String> oldCourses) {
-        oldCourses.forEach(course ->
-                courseEnrollments.computeIfPresent(course, (k, v) -> {
-                    v.remove(student);
-                    return v.isEmpty() ? null : v;
-                })
-        );
-        newCourses.forEach(course ->
-                courseEnrollments.computeIfAbsent(course, k -> new HashSet<>()).add(student)
-        );
+        for (String course : oldCourses) {
+            if (courseEnrollments.containsKey(course)) {
+                courseEnrollments.get(course).remove(student);
+                if (courseEnrollments.get(course).isEmpty()) {
+                    courseEnrollments.remove(course);
+                }
+            }
+        }
+        for (String course : newCourses) {
+            if (!courseEnrollments.containsKey(course)) {
+                courseEnrollments.put(course, new HashSet<>());
+            }
+            courseEnrollments.get(course).add(student);
+        }
     }
 
     public void displayAllStudentsSortedByName() {
-        students.values().stream()
-                .sorted(Comparator.comparing(Student::getName).thenComparingInt(Student::getId))
-                .forEach(System.out::println);
+        List<Student> studentList = new ArrayList<>(students.values());
+        Collections.sort(studentList, Comparator.comparing(Student::getName).thenComparingInt(Student::getId));
+        for (Student student : studentList) {
+            System.out.println(student);
+        }
     }
 
     public Set<Student> getStudentsByCourse(String course) {
@@ -99,7 +112,7 @@ class StudentManager {
     }
 }
 
-class Main {
+public class Main {
     public static void main(String[] args) {
         StudentManager manager = new StudentManager();
 
@@ -116,7 +129,9 @@ class Main {
         manager.displayAllStudentsSortedById();
 
         System.out.println("\n--- Студенты на курсе 'Java' ---");
-        manager.listStudentsByCourse("Java").forEach(System.out::println);
+        for (Student student : manager.listStudentsByCourse("Java")) {
+            System.out.println(student);
+        }
 
         manager.updateStudent(1, "Bob Smith", null, Set.of("Java", "Physics"));
 
@@ -124,6 +139,8 @@ class Main {
         manager.displayAllStudentsSortedByName();
 
         System.out.println("\n--- Студенты на курсе 'Physics' ---");
-        manager.getStudentsByCourse("Physics").forEach(System.out::println);
+        for (Student student : manager.getStudentsByCourse("Physics")) {
+            System.out.println(student);
+        }
     }
 }
