@@ -112,7 +112,7 @@ class StudentManager {
     }
 }
 
-public class Main {
+public class StudentManagementSystem {
     public static void main(String[] args) {
         StudentManager manager = new StudentManager();
 
